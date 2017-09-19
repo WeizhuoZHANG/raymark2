@@ -15,7 +15,7 @@ public class ASVConfig {
 	private List<Double> cspacePosition = new ArrayList<Double>();
 	private static final double boomLength = 0.05;
 	private Map<ASVConfig, Double> neighbors = new HashMap<ASVConfig, Double>();
-	private double cost;
+	private double cost = -0.1;
 	private ASVConfig parent = null;
 
 	/**

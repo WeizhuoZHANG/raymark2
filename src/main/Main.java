@@ -10,7 +10,7 @@ import java.io.IOException;
 import java.util.*;
 
 public class Main {
-    public static final double tolerance = 0.004;
+    public static final double tolerance = 0.01;
     public static final double sampleNearObstacle = 0.01;
     public static final Tester tester = new Tester();
     public static final int sampleTimes = 1000;
@@ -22,12 +22,13 @@ public class Main {
 //        String inputFileName = args[0];
 //        String outputFileName = args[1];
 
-        String inputFileName = "testcases/7ASV.txt";
+        String inputFileName = "testcases/3ASV-easy.txt";
         String outputFileName = "output.txt";
         ProblemSpec ps = new ProblemSpec();
         ps.loadProblem(inputFileName);
 
         ASVConfig initial = ps.getInitialState();
+        initial.setCost(0.0);
         ASVConfig goal = ps.getGoalState();
         int asvCount = ps.getASVCount();
 
@@ -38,17 +39,70 @@ public class Main {
         StringBuffer path = new StringBuffer();
 
         for (Obstacle obstacle : ps.getObstacles()) {
-            for (int i = 1; i < 100000; i++) {
+            for (int i = 1; i < 10000; i++) {
                 sample(0, 1, 0, 1, asvCount, ps.getObstacles(), asvConfigs);
                 sampleObstacle(obstacle, asvCount, ps.getObstacles(), asvConfigs);
             }
         }
-        printResult(path, asvConfigs);
+
+        mainLoop(initial, goal, path);
+
+//        printResult(path, asvConfigs);
         write(path, outputFileName);
 
         System.out.println("程序运行时间： " + (System.currentTimeMillis() - startTime) + "ms");
     }
 
+    public static void mainLoop(ASVConfig initial, ASVConfig goal, StringBuffer path) {
+        double shortestCost = 0;
+        int count = 0;
+        Comparator<ASVConfig> OrderIsdn = getComparator();
+        PriorityQueue<ASVConfig> asvConfigPriorityQueue = new PriorityQueue<ASVConfig>(OrderIsdn);
+        Set<ASVConfig> visited = new HashSet<ASVConfig>();
+
+        try {
+            // push initial node's start and end junction to priority queue
+            asvConfigPriorityQueue.add(initial);
+
+            // main loop to get the result
+            while (!asvConfigPriorityQueue.isEmpty() && !asvConfigPriorityQueue.peek().equals(goal)) {
+                ASVConfig peak = asvConfigPriorityQueue.poll();
+                System.out.println(peak.toString());
+                if (peak == goal) {
+                    shortestCost = peak.getCost();
+                    count = getParentPath(peak, path);
+                    break;
+                }
+
+                visited.add(peak);
+                for (ASVConfig node : peak.getNeighbors().keySet()) {
+                    if (!visited.contains(node)) {
+                        pushSuccessor(asvConfigPriorityQueue, peak, node,
+                                peak.getNeighbors().get(node));
+                    }
+                }
+            }
+        } catch (NullPointerException e) {
+        }
+        printResult(count, shortestCost, path);
+    }
+
+    public static void pushSuccessor(PriorityQueue<ASVConfig> queue, ASVConfig peak, ASVConfig node,
+                                     double length) {
+        // set temp cost
+        double tempCost = peak.getCost() + length;
+        if (node.getCost() == -1.0) {
+            node.setCost(tempCost);
+            queue.add(node);
+            node.setParent(peak);
+        } else if (tempCost < node.getCost()){
+            node.setCost(tempCost);
+            if (!queue.contains(node)) {
+                queue.add(node);
+            }
+            node.setParent(peak);
+        }
+    }
 
     public static void sampleObstacle(Obstacle obstacle, int asvCount, List<Obstacle> obstacles, Set<ASVConfig> asvConfigs){
         double minX = obstacle.getRect().getMinX();
@@ -74,7 +128,7 @@ public class Main {
         cspace.add(minX + Math.random() * (maxX - minX));
         cspace.add(minY + Math.random() * (maxY - minY));
         for (int i = 1; i < asvCount; i++){
-            cspace.add((Math.random() - 0.5) * Math.PI);
+            cspace.add((Math.random() - 0.5) * 2 * Math.PI);
         }
         ASVConfig asvConfig = new ASVConfig(cspace);
         if (check(asvConfig, obstacles)){
@@ -87,7 +141,7 @@ public class Main {
 
     public static void connect(ASVConfig head, ASVConfig tail, Set<ASVConfig> asvConfigs, List<Obstacle> obstacles){
         double maxDist = head.maxDistance(tail);
-        if (maxDist <= 0.001){
+        if (maxDist <= 0.1){
             double length = head.totalDistance(tail);
             head.addNeighbor(tail, length);
             tail.addNeighbor(head, length);
@@ -123,6 +177,14 @@ public class Main {
         return true;
     }
 
+    public static void printResult(int count, double cost, StringBuffer path){
+        if (cost == 0) {
+            path.append("no-path" + System.getProperty("line.separator"));
+        } else {
+            path.insert(0, count+ " " + cost + System.getProperty("line.separator"));
+        }
+    }
+
     public static void printResult(StringBuffer path, Set<ASVConfig> asvConfigs){
         String ls = System.getProperty("line.separator");
         path.append((asvConfigs.size() - 1) + " 100.0" + ls);
@@ -137,5 +199,35 @@ public class Main {
         FileWriter writer = new FileWriter(outputfile);
         writer.write(path.toString());
         writer.close();
+    }
+
+    public static Comparator<ASVConfig> getComparator() {
+        return new Comparator<ASVConfig>() {
+            @Override
+            public int compare(ASVConfig o1, ASVConfig o2) {
+                // TODO Auto-generated method stub
+                double numbera = o1.getCost();
+                double numberb = o2.getCost();
+                if (numbera < numberb) {
+                    return -1;
+                } else if (numbera > numberb) {
+                    return 1;
+                } else {
+                    return 0;
+                }
+            }
+        };
+    }
+
+    public static int getParentPath(ASVConfig asvConfig, StringBuffer path) {
+        int count = 0;
+        ASVConfig asvConfig2 = asvConfig;
+        while (asvConfig2.getParent() != null) {
+            path.insert(0, asvConfig2.toString() + System.getProperty("line.separator"));
+            asvConfig2 = asvConfig2.getParent();
+            count++;
+        }
+        path.insert(0, asvConfig2.toString() + System.getProperty("line.separator"));
+        return count++;
     }
 }
