@@ -15,6 +15,9 @@ public class Main {
     public static final Tester tester = new Tester();
     public static final int sampleTimes = 1000;
 
+    public static final int weight = 3;
+    public static LinkedList<ASVConfig> ASVpath = new LinkedList<ASVConfig>();
+
     public static void main(String[] args) throws IOException{
         long startTime = System.currentTimeMillis();
         Set<ASVConfig> asvConfigs = new HashSet<ASVConfig>();
@@ -22,7 +25,14 @@ public class Main {
 //        String inputFileName = args[0];
 //        String outputFileName = args[1];
 
-        String inputFileName = "testcases/3ASV-easy.txt";
+        String inputFileName = "testcases/3ASV.txt";
+//        String inputFileName = "testcases/3ASV-easy.txt";
+//        String inputFileName = "testcases/3ASV-x4.txt";
+//        String inputFileName = "testcases/7-ASV-x2.txt";
+//        String inputFileName = "testcases/7-ASV-x4.txt";
+//        String inputFileName = "testcases/7-ASV-x6.txt";
+//        String inputFileName = "testcases/7ASV-easy.txt";
+//        String inputFileName = "testcases/7ASV.txt";
         String outputFileName = "output.txt";
         ProblemSpec ps = new ProblemSpec();
         ps.loadProblem(inputFileName);
@@ -31,25 +41,56 @@ public class Main {
         initial.setCost(0.0);
         ASVConfig goal = ps.getGoalState();
         int asvCount = ps.getASVCount();
+//        int weight = (asvCount + ps.getObstacles().size()) / 2;
+//        if (asvCount < 6){
+//            weight++;
+//        }else {
+//            weight--;
+//        }
+//        if (ps.getObstacles().size() < 5){
+//            weight++;
+//        }else {
+//            weight--;
+//        }
 
         asvConfigs.add(initial);
         asvConfigs.add(goal);
-        connect(initial, goal, asvConfigs, ps.getObstacles());
+        connect(initial, goal, asvCount, asvConfigs, ps.getObstacles());
 
         StringBuffer path = new StringBuffer();
 
-        for (Obstacle obstacle : ps.getObstacles()) {
-            for (int i = 1; i < 10000; i++) {
-                sample(0, 1, 0, 1, asvCount, ps.getObstacles(), asvConfigs);
+        for (int i = 1; i < Math.pow(10,weight); i++) {
+            sample(0, 1, 0, 1, asvCount, ps.getObstacles(), asvConfigs);
+        }
+
+        for (int i = 1; i < Math.pow(10,weight); i++) {
+            for (Obstacle obstacle : ps.getObstacles()) {
                 sampleObstacle(obstacle, asvCount, ps.getObstacles(), asvConfigs);
+            }
+        }
+
+        if (asvCount > 5) {
+            Set<ASVConfig> asvTemp = loopNeighbor(asvConfigs);
+            for (int i = 0; i < 2000; i++) {
+                for (ASVConfig asv : asvTemp) {
+                    for (int j = 1; j < Math.pow(10, weight); j++) {
+//                    sample(asv.getcspacePosition().get(0) - 0.05, asv.getcspacePosition().get(0) + 0.05, asv.getcspacePosition().get(1) - 0.1, asv.getcspacePosition().get(1) + 0.1, asvCount, ps.getObstacles(), asvConfigs);
+                        sampleNoNeighbor(asv, asvCount, ps.getObstacles(), asvConfigs);
+                    }
+                }
+
+                asvTemp = loopNeighbor(asvTemp);
+                if (asvTemp.isEmpty())
+                    break;
             }
         }
 
         mainLoop(initial, goal, path);
 
-//        printResult(path, asvConfigs);
+        printResult(path, asvConfigs);
         write(path, outputFileName);
 
+        testNeighbor(asvConfigs);
         System.out.println("程序运行时间： " + (System.currentTimeMillis() - startTime) + "ms");
     }
 
@@ -65,9 +106,8 @@ public class Main {
             asvConfigPriorityQueue.add(initial);
 
             // main loop to get the result
-            while (!asvConfigPriorityQueue.isEmpty() && !asvConfigPriorityQueue.peek().equals(goal)) {
+            while (!asvConfigPriorityQueue.isEmpty()) {
                 ASVConfig peak = asvConfigPriorityQueue.poll();
-                System.out.println(peak.toString());
                 if (peak == goal) {
                     shortestCost = peak.getCost();
                     count = getParentPath(peak, path);
@@ -133,26 +173,47 @@ public class Main {
         ASVConfig asvConfig = new ASVConfig(cspace);
         if (check(asvConfig, obstacles)){
             for (ASVConfig asvTemp : asvConfigs){
-                connect(asvConfig, asvTemp, asvConfigs, obstacles);
+                connect(asvConfig, asvTemp,asvCount, asvConfigs, obstacles);
             }
             asvConfigs.add(asvConfig);
         }
     }
 
-    public static void connect(ASVConfig head, ASVConfig tail, Set<ASVConfig> asvConfigs, List<Obstacle> obstacles){
+
+    public static void sampleNoNeighbor(ASVConfig asv, int asvCount, List<Obstacle> obstacles, Set<ASVConfig> asvConfigs){
+        double delta = 0.05;
+        double minX = asv.getcspacePosition().get(0) - delta;
+        double minY = asv.getcspacePosition().get(1) - delta;
+        List<Double> cspace = new ArrayList<Double>();
+        cspace.add(minX + Math.random() * delta);
+        cspace.add(minY + Math.random() * delta);
+        for (int i = 2; i <= asvCount; i++){
+            double theta = tester.normaliseAngle(asv.getcspacePosition().get(i) + (Math.random() - 0.5));
+            cspace.add(theta);
+        }
+        ASVConfig asvConfig = new ASVConfig(cspace);
+        if (check(asvConfig, obstacles)){
+            for (ASVConfig asvTemp : asvConfigs){
+                connect(asvConfig, asvTemp,asvCount, asvConfigs, obstacles);
+            }
+            asvConfigs.add(asvConfig);
+        }
+    }
+
+    public static void connect(ASVConfig head, ASVConfig tail, int asvCount, Set<ASVConfig> asvConfigs, List<Obstacle> obstacles){
+//        double maxDist = head.totalDistance(tail) / asvCount;
         double maxDist = head.maxDistance(tail);
-        if (maxDist <= 0.1){
+        if (maxDist <= 0.05){
             double length = head.totalDistance(tail);
             head.addNeighbor(tail, length);
             tail.addNeighbor(head, length);
-            return;
-        } else if(maxDist <= tolerance){
-            ASVConfig middle = new ASVConfig(middleCSpace(head, tail));
-            if (check(middle, obstacles)) {
+//        } else if(maxDist <= tolerance){
+//            ASVConfig middle = new ASVConfig(middleCSpace(head, tail));
+//            if (check(middle, obstacles)) {
 //                asvConfigs.add(middle);
-                connect(middle, head, asvConfigs, obstacles);
-                connect(middle, tail, asvConfigs, obstacles);
-            }
+//                connect(middle, head, asvConfigs, obstacles);
+//                connect(middle, tail, asvConfigs, obstacles);
+//            }
         }
     }
 
@@ -224,10 +285,32 @@ public class Main {
         ASVConfig asvConfig2 = asvConfig;
         while (asvConfig2.getParent() != null) {
             path.insert(0, asvConfig2.toString() + System.getProperty("line.separator"));
+            ASVpath.add(asvConfig);
             asvConfig2 = asvConfig2.getParent();
             count++;
         }
+        ASVpath.add(asvConfig2);
         path.insert(0, asvConfig2.toString() + System.getProperty("line.separator"));
         return count++;
+    }
+
+    public static Set<ASVConfig> loopNeighbor(Set<ASVConfig> asvConfigs){
+        Set<ASVConfig> asvCopy = new HashSet<ASVConfig>();
+        for (ASVConfig asvConfig : asvConfigs){
+            if (asvConfig.getNeighbors().isEmpty()){
+                asvCopy.add(asvConfig);
+            }
+        }
+        return asvCopy;
+    }
+
+    public static void testNeighbor(Set<ASVConfig> asvConfigs){
+        int i = 0;
+        for (ASVConfig asvConfig : asvConfigs){
+            if (asvConfig.getNeighbors().isEmpty()){
+                i++;
+            }
+        }
+        System.out.println(i);
     }
 }

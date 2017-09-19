@@ -15,7 +15,7 @@ public class ASVConfig {
 	private List<Double> cspacePosition = new ArrayList<Double>();
 	private static final double boomLength = 0.05;
 	private Map<ASVConfig, Double> neighbors = new HashMap<ASVConfig, Double>();
-	private double cost = -0.1;
+	private double cost = -1.0;
 	private ASVConfig parent = null;
 
 	/**
@@ -148,8 +148,9 @@ public class ASVConfig {
 	}
 
 	public void addNeighbor(ASVConfig asvConfig, double cost){
-		neighbors.put(asvConfig, cost);
+		this.neighbors.put(asvConfig, cost);
 	}
+
 
 	public void setCost(double cost){
 		this.cost = cost;
