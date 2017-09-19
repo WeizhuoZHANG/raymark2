@@ -6,6 +6,8 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Scanner;
 
+//TO:
+
 /**
  * This class represents one of the rectangular obstacles in Assignment 1.
  * 

@@ -1,9 +1,6 @@
 package problem;
 
-import java.util.ArrayList;
-import java.util.InputMismatchException;
-import java.util.List;
-import java.util.Scanner;
+import java.util.*;
 import java.awt.geom.Point2D;
 
 /**
@@ -15,6 +12,10 @@ import java.awt.geom.Point2D;
 public class ASVConfig {
 	/** The position of each ASV */
 	private List<Point2D> asvPositions = new ArrayList<Point2D>();
+	private List<Double> cspacePosition = new ArrayList<Double>();
+	private double boomLengh = 0.05;
+	private Map<ASVConfig, Double> neighbors = new HashMap<ASVConfig, Double>();
+	private double cost;
 
 	/**
 	 * Constructor. Takes an array of 2n x and y coordinates, where n is the
@@ -24,10 +25,20 @@ public class ASVConfig {
 	 *            the x- and y-coordinates of the ASVs.
 	 */
 	public ASVConfig(double[] coords) {
-		for (int i = 0; i < coords.length / 2; i++) {
+
+		cspacePosition.add(coords[0]);
+		cspacePosition.add(coords[1]);
+		asvPositions.add(new Point2D.Double(coords[0], coords[1]));
+		for (int i = 1; i < coords.length / 2; i++) {
 			asvPositions.add(new Point2D.Double(coords[i * 2],
 					coords[i * 2 + 1]));
+
+			cspacePosition.add(getAngle(asvPositions.get(i), asvPositions.get(i-1)));
 		}
+	}
+
+	public double getAngle(Point2D point1, Point2D point2){
+		return Math.atan2(point1.getY() - point2.getY(), point1.getX() - point2.getX());
 	}
 
 	/**
@@ -41,9 +52,12 @@ public class ASVConfig {
 	 */
 	public ASVConfig(int asvCount, String str) throws InputMismatchException {
 		Scanner s = new Scanner(str);
-		for (int i = 0; i < asvCount; i++) {
-			asvPositions
-					.add(new Point2D.Double(s.nextDouble(), s.nextDouble()));
+		asvPositions.add(new Point2D.Double(s.nextDouble(), s.nextDouble()));
+		cspacePosition.add(asvPositions.get(0).getX());
+		cspacePosition.add(asvPositions.get(0).getY());
+		for (int i = 1; i < asvCount; i++) {
+			asvPositions.add(new Point2D.Double(s.nextDouble(), s.nextDouble()));
+			cspacePosition.add(getAngle(asvPositions.get(i), asvPositions.get(i-1)));
 		}
 		s.close();
 	}
@@ -56,6 +70,19 @@ public class ASVConfig {
 	 */
 	public ASVConfig(ASVConfig cfg) {
 		asvPositions = cfg.getASVPositions();
+		cspacePosition = cfg.getcspacePosition();
+	}
+
+	public ASVConfig(List<Double> cspace){
+		cspacePosition = cspace;
+		asvPositions.add(new Point2D.Double(cspace.get(0), cspace.get(1)));
+		for (int i = 2; i < cspace.size(); i++){
+			asvPositions.add(getPoint2DPosition(asvPositions.get(i - 2), cspace.get(i)));
+		}
+	}
+
+	public Point2D getPoint2DPosition(Point2D point, double angle){
+		return new Point2D.Double(point.getX() + boomLengh * Math.cos(angle), point.getY() + boomLengh * Math.sin(angle));
 	}
 
 	/**
@@ -119,6 +146,14 @@ public class ASVConfig {
 		return totalDistance;
 	}
 
+	public void addNeighbor(ASVConfig asvConfig, double cost){
+		neighbors.put(asvConfig, cost);
+	}
+
+	public void setCost(double cost){
+		this.cost = cost;
+	}
+
 	/**
 	 * Returns the position of the ASV with the given number.
 	 *
@@ -146,5 +181,17 @@ public class ASVConfig {
 	 */
 	public List<Point2D> getASVPositions() {
 		return new ArrayList<Point2D>(asvPositions);
+	}
+
+	public List<Double> getcspacePosition() {
+		return cspacePosition;
+	}
+
+	public double getCost(){
+		return cost;
+	}
+
+	public Map<ASVConfig, Double> getNeighbors() {
+		return neighbors;
 	}
 }
