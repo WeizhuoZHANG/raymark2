@@ -1,12 +1,8 @@
 package problem;
 
+import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Scanner;
-
-//TO:
+import java.util.*;
 
 /**
  * This class represents one of the rectangular obstacles in Assignment 1.
@@ -16,6 +12,8 @@ import java.util.Scanner;
 public class Obstacle {
 	/** Stores the obstacle as a Rectangle2D */
 	private Rectangle2D rect;
+	private Map<String, String> orientation = new HashMap<String, String>();
+	private static final double boundError = 0.001;
 
 	/**
 	 * Constructs an obstacle with the given (x,y) coordinates of the
@@ -32,6 +30,7 @@ public class Obstacle {
 	 */
 	public Obstacle(double x, double y, double w, double h) {
 		this.rect = new Rectangle2D.Double(x, y, w, h);
+		initOrientation(this.rect, boundError);
 	}
 
 	/**
@@ -55,8 +54,34 @@ public class Obstacle {
 		double yMax = Collections.max(ys);
 		this.rect = new Rectangle2D.Double(xMin, yMin, xMax - xMin, yMax - yMin);
 		s.close();
+		initOrientation(this.rect, boundError);
 	}
 
+	public void initOrientation(Rectangle2D rect, double boundError){
+		if (rect.getMinX() <= boundError){
+			orientation.put("left", "bounded");
+		}else {
+			orientation.put("left", "notBounded");
+		}
+
+		if (1.0 - rect.getMaxX() <= boundError){
+			orientation.put("right", "bounded");
+		}else {
+			orientation.put("right", "notBounded");
+		}
+
+		if (1.0 - rect.getMaxY() <= boundError){
+			orientation.put("up", "bounded");
+		}else {
+			orientation.put("up", "notBounded");
+		}
+
+		if (rect.getMinY() <= boundError){
+			orientation.put("down", "bounded");
+		}else {
+			orientation.put("down", "notBounded");
+		}
+	}
 	/**
 	 * Returns a copy of the Rectangle2D representing this obstacle.
 	 * 
@@ -66,6 +91,9 @@ public class Obstacle {
 		return (Rectangle2D) rect.clone();
 	}
 
+	public Map<String, String> getOrientation(){
+		return orientation;
+	}
 	/**
 	 * Returns a String representation of this obstacle.
 	 * 

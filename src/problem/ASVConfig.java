@@ -13,9 +13,10 @@ public class ASVConfig {
 	/** The position of each ASV */
 	private List<Point2D> asvPositions = new ArrayList<Point2D>();
 	private List<Double> cspacePosition = new ArrayList<Double>();
-	private double boomLengh = 0.05;
+	private static final double boomLength = 0.05;
 	private Map<ASVConfig, Double> neighbors = new HashMap<ASVConfig, Double>();
 	private double cost;
+	private ASVConfig parent = null;
 
 	/**
 	 * Constructor. Takes an array of 2n x and y coordinates, where n is the
@@ -82,7 +83,7 @@ public class ASVConfig {
 	}
 
 	public Point2D getPoint2DPosition(Point2D point, double angle){
-		return new Point2D.Double(point.getX() + boomLengh * Math.cos(angle), point.getY() + boomLengh * Math.sin(angle));
+		return new Point2D.Double(point.getX() + boomLength * Math.cos(angle), point.getY() + boomLength * Math.sin(angle));
 	}
 
 	/**
@@ -154,6 +155,10 @@ public class ASVConfig {
 		this.cost = cost;
 	}
 
+	public void setParent(ASVConfig parent) {
+		this.parent = parent;
+	}
+
 	/**
 	 * Returns the position of the ASV with the given number.
 	 *
@@ -193,5 +198,9 @@ public class ASVConfig {
 
 	public Map<ASVConfig, Double> getNeighbors() {
 		return neighbors;
+	}
+
+	public ASVConfig getParent() {
+		return parent;
 	}
 }
