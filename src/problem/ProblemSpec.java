@@ -149,6 +149,51 @@ public class ProblemSpec {
 		}
 	}
 
+
+	public double calculate(String filename) throws IOException {
+		solutionLoaded = false;
+		BufferedReader input = new BufferedReader(new FileReader(filename));
+		String line;
+		int lineNo = 0;
+		Scanner s;
+		try {
+			line = input.readLine();
+			lineNo++;
+			s = new Scanner(line);
+			int pathLength = s.nextInt() + 1;
+			solutionCost = s.nextDouble();
+			s.close();
+
+			path = new ArrayList<ASVConfig>();
+			for (int i = 0; i < pathLength; i++) {
+				line = input.readLine();
+				lineNo++;
+				path.add(new ASVConfig(asvCount, line));
+			}
+			solutionLoaded = true;
+		} catch (InputMismatchException e) {
+			throw new IOException(String.format(
+					"Invalid number format on line %d: %s", lineNo,
+					e.getMessage()));
+		} catch (NoSuchElementException e) {
+			throw new IOException(String.format("Not enough tokens on line %d",
+					lineNo));
+		} catch (NullPointerException e) {
+			throw new IOException(String.format(
+					"Line %d expected, but file ended.", lineNo));
+		} finally {
+			input.close();
+		}
+
+		double cost = 0;
+		ASVConfig c0 = path.get(0);
+		for (int i = 1; i < path.size(); i++) {
+			ASVConfig c1 = path.get(i);
+			cost += c0.totalDistance(c1);
+			c0 = c1;
+		}
+		return cost;
+	}
 	/**
 	 * Saves the current solution to a solution text file.
 	 * 
@@ -196,6 +241,17 @@ public class ProblemSpec {
 		ASVConfig c0 = path.get(0);
 		for (int i = 1; i < path.size(); i++) {
 			ASVConfig c1 = path.get(i);
+			cost += c0.totalDistance(c1);
+			c0 = c1;
+		}
+		return cost;
+	}
+
+	public double calculate2(List<ASVConfig> p) {
+		double cost = 0;
+		ASVConfig c0 = p.get(p.size() - 1);
+		for (int i = p.size() - 1; i >= 0; i--) {
+			ASVConfig c1 = p.get(i);
 			cost += c0.totalDistance(c1);
 			c0 = c1;
 		}
