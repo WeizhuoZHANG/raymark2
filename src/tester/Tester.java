@@ -320,7 +320,7 @@ public class Tester {
 	 * @return whether the given configuration is convex.
 	 */
 	public boolean isConvex(ASVConfig cfg) {
-		List<Point2D> points = cfg.getASVPositions();
+		List<Point2D> points = new ArrayList<>(cfg.getASVPositions());
 		points.add(points.get(0));
 		points.add(points.get(1));
 
@@ -412,7 +412,7 @@ public class Tester {
 	 */
 	public boolean hasEnoughArea(ASVConfig cfg) {
 		double total = 0;
-		List<Point2D> points = cfg.getASVPositions();
+		List<Point2D> points = new ArrayList<>(cfg.getASVPositions());
 		points.add(points.get(0));
 		points.add(points.get(1));
 		for (int i = 1; i < points.size() - 1; i++) {

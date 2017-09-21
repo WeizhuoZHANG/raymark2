@@ -88,7 +88,8 @@ public class Obstacle {
 	 * @return a copy of the Rectangle2D representing this obstacle.
 	 */
 	public Rectangle2D getRect() {
-		return (Rectangle2D) rect.clone();
+//		return (Rectangle2D) rect.clone();
+		return rect;
 	}
 
 	public Map<String, String> getOrientation(){

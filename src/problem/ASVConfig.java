@@ -160,6 +160,18 @@ public class ASVConfig {
 		this.parent = parent;
 	}
 
+	public void setCspacePosition(int index, double value) {
+		List<Double> cspace = new ArrayList<>(cspacePosition);
+		cspace.set(index, value);
+		List<Point2D> positions = new ArrayList<>();
+		positions.add(new Point2D.Double(cspace.get(0), cspace.get(1)));
+		for (int i = 2; i < cspace.size(); i++){
+			positions.add(getPoint2DPosition(positions.get(i - 2), cspace.get(i)));
+		}
+		this.cspacePosition = cspace;
+		this.asvPositions = positions;
+	}
+
 	/**
 	 * Returns the position of the ASV with the given number.
 	 *
@@ -186,7 +198,8 @@ public class ASVConfig {
 	 * @return the positions of all the ASVs, in order.
 	 */
 	public List<Point2D> getASVPositions() {
-		return new ArrayList<Point2D>(asvPositions);
+//		return new ArrayList<Point2D>(asvPositions);
+		return this.asvPositions;
 	}
 
 	public List<Double> getcspacePosition() {
