@@ -11,7 +11,7 @@ import java.io.IOException;
 import java.util.*;
 
 public class Main {
-    public static final double tolerance = 0.15;
+    public static final double tolerance = 0.1;
     public static final double maxDistance = 0.001;
     public static final double sampleNearObstacle = 0.1;
     public static final Tester tester = new Tester();
@@ -38,6 +38,14 @@ public class Main {
 //        String inputFileName = "testcases/7-ASV-x6.txt";
 //        String inputFileName = "testcases/7ASV-easy.txt";
 //        String inputFileName = "testcases/7ASV.txt";
+//        String inputFileName = "testcases/01.txt";
+//        String inputFileName = "testcases/02.txt";
+//        String inputFileName = "testcases/03.txt";
+//        String inputFileName = "testcases/04.txt";
+//        String inputFileName = "testcases/05.txt";
+//        String inputFileName = "testcases/06.txt";
+//        String inputFileName = "testcases/07.txt";
+
         String outputFileName = "output.txt";
         ProblemSpec ps = new ProblemSpec();
         ps.loadProblem(inputFileName);
@@ -48,7 +56,7 @@ public class Main {
         int asvCount = ps.getASVCount();
 
         ArrayList<Point2D> test = FindSamplePosition(ps.getObstacles(), 200);
-        ArrayList<Point2D> test2 = FindSamplePositionCorner(ps.getObstacles(), 50);
+        ArrayList<Point2D> test2 = FindSamplePositionCorner(ps.getObstacles(), 15);
 //        int weight = (asvCount + ps.getObstacles().size()) / 2;
 //        if (asvCount < 6){
 //            weight++;
@@ -70,12 +78,12 @@ public class Main {
         StringBuffer path = new StringBuffer();
 
         System.out.println("loop uniform sample");
-        for (int i = 1; i < Math.pow(18, weight); i++) {
+        for (int i = 1; i < Math.pow(10, weight); i++) {
             sample(0, 1, 0, 1, asvCount, ps.getObstacles(), asvConfigs);
         }
 
         System.out.println("loop obstacle sample");
-        for (int i = 1; i < Math.pow(9, weight); i++) {
+        for (int i = 1; i < Math.pow(10, weight); i++) {
             for (Obstacle obstacle : ps.getObstacles()) {
                 sampleObstacle(obstacle, asvCount, ps.getObstacles(), asvConfigs);
             }
@@ -84,14 +92,15 @@ public class Main {
         System.out.println("loop collision free points: " + test.size());
         System.out.println("loop collision free samples");
         for (Point2D point : test) {
-            for (int i = 1; i < 80; i++) {
-                sampleOnPoint(point, asvCount, ps.getObstacles(), asvConfigs);
+            for (int i = 1; i < 50; i++) {
+//                sampleOnPoint(point, asvCount, ps.getObstacles(), asvConfigs);
+                sampleOnPointTranslation(point, asvCount, ps.getObstacles(), asvConfigs);
             }
         }
 
         System.out.println("loop collision free CORNER samples");
         for (Point2D point : test2) {
-            for (int i = 1; i < 15; i++) {
+            for (int i = 1; i < 5; i++) {
                 sampleOnPoint(point, asvCount, ps.getObstacles(), asvConfigs);
             }
         }
@@ -116,8 +125,8 @@ public class Main {
         computeMiddle(goal, ps.getObstacles());
         String result = getParentPath(goal, path);
         printResult(result, path);
-        System.out.println("Printing Result");
-        printResult(path, asvConfigs);
+//        System.out.println("Printing Result");
+//        printResult(path, asvConfigs);
         write(path, outputFileName);
 
 //        testNeighbor(asvConfigs);
@@ -203,14 +212,57 @@ public class Main {
         }
         ASVConfig asvConfig = new ASVConfig(cspace);
         if (check(asvConfig, obstacles)) {
-//            Set<ASVConfig> temp = new HashSet<>(asvConfigs);
             for (ASVConfig asvTemp : asvConfigs) {
                 connect(asvConfig, asvTemp, asvCount, asvConfigs, obstacles);
             }
             asvConfigs.add(asvConfig);
         }
+//        checkSample(cspace, obstacles, asvConfigs, asvCount);
     }
 
+    public static void checkSample(List<Double> cspace, List<Obstacle> obstacles, Set<ASVConfig> asvConfigs, int asvCount) {
+        ASVConfig asvConfig = new ASVConfig(cspace);
+        if (check(asvConfig, obstacles)) {
+            int goodState = 0;
+            ASVConfig nearest = asvConfig;
+            double distance = 100;
+            for (ASVConfig asvTemp : asvConfigs) {
+                double maxDist = asvConfig.maxDistance(asvTemp);
+                if (maxDist < distance) {
+                    nearest = asvTemp;
+                    distance = maxDist;
+                }
+                if (connect(asvConfig, asvTemp, asvCount, asvConfigs, obstacles)) {
+                    goodState++;
+                }
+            }
+            if (goodState == 0) {
+                connectNearest(asvConfig, nearest, obstacles, distance);
+            }
+            asvConfigs.add(asvConfig);
+        }
+    }
+
+    public static void connectNearest(ASVConfig head, ASVConfig tail, List<Obstacle> obstacles, double maxDist) {
+        double length = maxDist;
+        int count = (int) (maxDist / maxDistance) + 1;
+        ASVConfig temp = new ASVConfig(head);
+        List<Double> delta = new ArrayList<>();
+        for (int i = 0; i < head.getcspacePosition().size(); i++) {
+            delta.add((tail.getcspacePosition().get(i) - head.getcspacePosition().get(i)) / count);
+        }
+        int steps = 0;
+        for (; steps < count; steps++) {
+            for (int j = 0; j < temp.getcspacePosition().size(); j++) {
+                temp.setCspacePosition(j, temp.getcspacePosition().get(j) + delta.get(j));
+            }
+            if (!check(temp, obstacles)) {
+                return;
+            }
+        }
+        head.addNeighbor(tail, length);
+        tail.addNeighbor(head, length);
+    }
 
     public static void sampleNoNeighbor(ASVConfig asv, int asvCount, List<Obstacle> obstacles, Set<ASVConfig> asvConfigs) {
         double delta = 0.05;
@@ -230,6 +282,8 @@ public class Main {
             }
             asvConfigs.add(asvConfig);
         }
+//        checkSample(cspace, obstacles, asvConfigs, asvCount);
+
     }
 
     public static boolean connect(ASVConfig head, ASVConfig tail, int asvCount, Set<ASVConfig> asvConfigs, List<Obstacle> obstacles) {
@@ -539,7 +593,80 @@ public class Main {
             }
             asvConfigs.add(asvConfig);
         }
-//        asvConfigs.add(asvConfig);
+//        checkSample(cspace, obstacles, asvConfigs, asvCount);
+    }
+
+    public static void sampleOnPointTranslation(Point2D point, int asvCount, List<Obstacle> obstacles, Set<ASVConfig> asvConfigs) {
+        List<Double> cspace = new ArrayList<Double>();
+        cspace.add(point.getX());
+        cspace.add(point.getY());
+
+        for (int i = 1; i < asvCount; i++) {
+            cspace.add((Math.random() - 0.5) * 2 * Math.PI);
+        }
+        ASVConfig asvConfig = new ASVConfig(cspace);
+        if (check(asvConfig, obstacles)) {
+            for (ASVConfig asvTemp : asvConfigs) {
+                connect(asvConfig, asvTemp, asvCount, asvConfigs, obstacles);
+            }
+            asvConfigs.add(asvConfig);
+            translation(asvConfig, asvConfigs, obstacles);
+        }
+//        checkSample(cspace, obstacles, asvConfigs, asvCount);
+    }
+
+    public static void translation(ASVConfig asvConfig, Set<ASVConfig> asvConfigs, List<Obstacle> obstacles){
+        //Left translation
+        double delta = 0.05;
+        double threshold = 0.2;
+        int asvCount = asvConfig.getASVCount();
+        for (double i = delta; i < threshold;i += delta){
+            List<Double> cspace = new ArrayList<>(asvConfig.getcspacePosition());
+            cspace.set(0, asvConfig.getcspacePosition().get(0) + i);
+            if (!checkLoop(cspace, obstacles, asvConfigs, asvCount)){
+                break;
+            }
+        }
+
+        //Right translation
+        for (double i = delta; i < threshold;i += delta){
+            List<Double> cspace = new ArrayList<>(asvConfig.getcspacePosition());
+            cspace.set(0, asvConfig.getcspacePosition().get(0) - i);
+            if (!checkLoop(cspace, obstacles, asvConfigs, asvCount)){
+                break;
+            }
+        }
+
+        //Up translation
+        for (double i = delta; i < threshold;i += delta){
+            List<Double> cspace = new ArrayList<>(asvConfig.getcspacePosition());
+            cspace.set(0, asvConfig.getcspacePosition().get(1) + i);
+            if (!checkLoop(cspace, obstacles, asvConfigs, asvCount)){
+                break;
+            }
+        }
+
+        //Down translation
+        for (double i = delta; i < threshold;i += delta){
+            List<Double> cspace = new ArrayList<>(asvConfig.getcspacePosition());
+            cspace.set(0, asvConfig.getcspacePosition().get(1) - i);
+            if (!checkLoop(cspace, obstacles, asvConfigs, asvCount)){
+                break;
+            }
+        }
+    }
+
+    public static boolean checkLoop(List<Double> cspace, List<Obstacle> obstacles, Set<ASVConfig> asvConfigs, int asvCount){
+        ASVConfig temp = new ASVConfig(cspace);
+        if (check(temp, obstacles)) {
+            for (ASVConfig asvTemp : asvConfigs) {
+                connect(temp, asvTemp, asvCount, asvConfigs, obstacles);
+            }
+            asvConfigs.add(temp);
+        } else {
+            return false;
+        }
+        return true;
     }
 
     public static ArrayList<Point2D> FindSamplePosition(List<Obstacle> obstacles, double Density) {
