@@ -11,7 +11,7 @@ import java.io.IOException;
 import java.util.*;
 
 public class Main {
-    public static final double tolerance = 0.1;
+    public static final double tolerance = 0.06;
     public static final double maxDistance = 0.001;
     public static final double sampleNearObstacle = 0.1;
     public static final Tester tester = new Tester();
@@ -78,7 +78,7 @@ public class Main {
         StringBuffer path = new StringBuffer();
 
         System.out.println("loop uniform sample");
-        for (int i = 1; i < Math.pow(10, weight); i++) {
+        for (int i = 1; i < Math.pow(17, weight); i++) {
             sample(0, 1, 0, 1, asvCount, ps.getObstacles(), asvConfigs);
         }
 
@@ -287,7 +287,8 @@ public class Main {
     }
 
     public static boolean connect(ASVConfig head, ASVConfig tail, int asvCount, Set<ASVConfig> asvConfigs, List<Obstacle> obstacles) {
-        double aveDist = head.totalDistance(tail) / asvCount;
+//        double aveDist = head.totalDistance(tail) / asvCount;
+        double aveDist = head.getPosition(0).distance(tail.getPosition(0));
         double maxDist = head.maxDistance(tail);
         double length = head.maxDistance(tail);
         if (maxDist <= maxDistance) {
