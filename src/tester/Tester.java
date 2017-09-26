@@ -302,7 +302,7 @@ public class Tester {
 	 *            the angle to normalise.
 	 * @return the normalised angle.
 	 */
-	public double normaliseAngle(double angle) {
+	public static double normaliseAngle(double angle) {
 		while (angle <= -Math.PI) {
 			angle += 2 * Math.PI;
 		}

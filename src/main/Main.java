@@ -11,7 +11,7 @@ import java.io.IOException;
 import java.util.*;
 
 public class Main {
-    public static final double tolerance = 0.06;
+    public static final double tolerance = 0.3;
     public static final double maxDistance = 0.001;
     public static final double sampleNearObstacle = 0.1;
     public static final Tester tester = new Tester();
@@ -55,19 +55,8 @@ public class Main {
         ASVConfig goal = ps.getGoalState();
         int asvCount = ps.getASVCount();
 
-        ArrayList<Point2D> test = FindSamplePosition(ps.getObstacles(), 200);
+        ArrayList<Point2D> test = FindSamplePosition(ps.getObstacles(), 100);
         ArrayList<Point2D> test2 = FindSamplePositionCorner(ps.getObstacles(), 15);
-//        int weight = (asvCount + ps.getObstacles().size()) / 2;
-//        if (asvCount < 6){
-//            weight++;
-//        }else {
-//            weight--;
-//        }
-//        if (ps.getObstacles().size() < 5){
-//            weight++;
-//        }else {
-//            weight--;
-//        }
 
         System.out.println("Weight: " + weight);
 
@@ -77,13 +66,13 @@ public class Main {
 
         StringBuffer path = new StringBuffer();
 
-        System.out.println("loop uniform sample");
-        for (int i = 1; i < Math.pow(17, weight); i++) {
-            sample(0, 1, 0, 1, asvCount, ps.getObstacles(), asvConfigs);
-        }
+//        System.out.println("loop uniform sample");
+//        for (int i = 1; i < Math.pow(7, weight); i++) {
+//            sample(0, 1, 0, 1, asvCount, ps.getObstacles(), asvConfigs);
+//        }
 
         System.out.println("loop obstacle sample");
-        for (int i = 1; i < Math.pow(10, weight); i++) {
+        for (int i = 1; i < Math.pow(5, weight); i++) {
             for (Obstacle obstacle : ps.getObstacles()) {
                 sampleObstacle(obstacle, asvCount, ps.getObstacles(), asvConfigs);
             }
@@ -92,18 +81,18 @@ public class Main {
         System.out.println("loop collision free points: " + test.size());
         System.out.println("loop collision free samples");
         for (Point2D point : test) {
-            for (int i = 1; i < 50; i++) {
+            for (int i = 1; i < 10; i++) {
 //                sampleOnPoint(point, asvCount, ps.getObstacles(), asvConfigs);
                 sampleOnPointTranslation(point, asvCount, ps.getObstacles(), asvConfigs);
             }
         }
 
-        System.out.println("loop collision free CORNER samples");
-        for (Point2D point : test2) {
-            for (int i = 1; i < 5; i++) {
-                sampleOnPoint(point, asvCount, ps.getObstacles(), asvConfigs);
-            }
-        }
+//        System.out.println("loop collision free CORNER samples");
+//        for (Point2D point : test2) {
+//            for (int i = 1; i < 9; i++) {
+//                sampleOnPoint(point, asvCount, ps.getObstacles(), asvConfigs);
+//            }
+//        }
 
         if (asvCount > 5) {
             Set<ASVConfig> asvTemp = loopNeighbor(asvConfigs);
@@ -121,7 +110,7 @@ public class Main {
             }
         }
 
-        mainLoop(initial, goal, path);
+         mainLoop(initial, goal, path);
         computeMiddle(goal, ps.getObstacles());
         String result = getParentPath(goal, path);
         printResult(result, path);
@@ -134,7 +123,6 @@ public class Main {
     }
 
     public static void mainLoop(ASVConfig initial, ASVConfig goal, StringBuffer path) {
-//        double shortestCost = 0;
         int count = 0;
         Comparator<ASVConfig> OrderIsdn = getComparator();
         PriorityQueue<ASVConfig> asvConfigPriorityQueue = new PriorityQueue<ASVConfig>(OrderIsdn);
@@ -148,8 +136,6 @@ public class Main {
             while (!asvConfigPriorityQueue.isEmpty()) {
                 ASVConfig peak = asvConfigPriorityQueue.poll();
                 if (peak == goal) {
-//                    shortestCost = peak.getCost();
-//                    count = getParentPath(peak, path);
                     break;
                 }
 
@@ -163,8 +149,6 @@ public class Main {
             }
         } catch (NullPointerException e) {
         }
-//        printResult(count, shortestCost, path);
-//        return shortestCost;
     }
 
     public static void pushSuccessor(PriorityQueue<ASVConfig> queue, ASVConfig peak, ASVConfig node,
@@ -295,77 +279,70 @@ public class Main {
             head.addNeighbor(tail, length);
             tail.addNeighbor(head, length);
             return true;
+//        }else{
         } else if (aveDist <= tolerance) {
-            int count = (int) (maxDist / maxDistance) + 1;
-            ASVConfig temp = new ASVConfig(head);
-            List<Double> delta = new ArrayList<>();
-            for (int i = 0; i < head.getcspacePosition().size(); i++) {
-                delta.add((tail.getcspacePosition().get(i) - head.getcspacePosition().get(i)) / count);
-            }
-            int steps = 0;
-            for (; steps < count; steps++) {
-                for (int j = 0; j < temp.getcspacePosition().size(); j++) {
-                    temp.setCspacePosition(j, temp.getcspacePosition().get(j) + delta.get(j));
+            double angle = head.getcspacePosition().get(2) - tail.getcspacePosition().get(2);
+            if (Math.abs(angle) <= Math.PI){
+                int count = (int) (maxDist / maxDistance) + 1;
+                ASVConfig temp = new ASVConfig(head);
+                List<Double> delta = new ArrayList<>();
+                for (int i = 0; i < head.getcspacePosition().size(); i++) {
+                    delta.add((tail.getcspacePosition().get(i) - head.getcspacePosition().get(i)) / count);
                 }
-
-                if (!check(temp, obstacles)) {
-//                    System.out.println("sssss");
+                if (!loopForConnect(count, temp, delta, obstacles)){
                     return false;
                 }
+                head.addNeighbor(tail, length);
+                tail.addNeighbor(head, length);
+                return true;
+            } else {
+                if (angle > 0){
+                    int count = (int) (maxDist / maxDistance) + 1;
+                    ASVConfig temp = new ASVConfig(head);
+                    ASVConfig tailTemp = new ASVConfig(tail);
+                    tailTemp.setCspacePosition(2, tailTemp.getcspacePosition().get(2) + 2 * Math.PI);
+                    List<Double> delta = new ArrayList<>();
+                    for (int i = 0; i < head.getcspacePosition().size(); i++) {
+                        delta.add((tailTemp.getcspacePosition().get(i) - head.getcspacePosition().get(i)) / count);
+                    }
+                    if (!loopForConnect(count, temp, delta, obstacles)){
+                        return false;
+                    }
+                    head.addNeighbor(tail, length);
+                    tail.addNeighbor(head, length);
+                    return true;
+                }else {
+                    int count = (int) (maxDist / maxDistance) + 1;
+                    ASVConfig temp = new ASVConfig(head);
+                    temp.setCspacePosition(2, temp.getcspacePosition().get(2) + 2 * Math.PI);
+                    List<Double> delta = new ArrayList<>();
+                    for (int i = 0; i < head.getcspacePosition().size(); i++) {
+                        delta.add((tail.getcspacePosition().get(i) - temp.getcspacePosition().get(i)) / count);
+                    }
+                    if (!loopForConnect(count, temp, delta, obstacles)){
+                        return false;
+                    }
+                    head.addNeighbor(tail, length);
+                    tail.addNeighbor(head, length);
+                    return true;
+                }
             }
-            head.addNeighbor(tail, length);
-            tail.addNeighbor(head, length);
-            return true;
         }
         return false;
     }
-//    public static boolean connect(ASVConfig head, ASVConfig tail, int asvCount, Set<ASVConfig> asvConfigs, List<Obstacle> obstacles){
-//        double aveDist = head.totalDistance(tail) / asvCount;
-//        double maxDist = head.maxDistance(tail);
-//        if (maxDist <= maxDistance){
-//            return true;
-////            double length = head.maxDistance(tail);
-////            head.addNeighbor(tail, length);
-////            tail.addNeighbor(head, length);
-//        } else if(aveDist <= tolerance){
-//            ASVConfig middle = new ASVConfig(middleCSpace(head, tail));
-//            if (check(middle, obstacles)) {
-////                asvConfigs.add(middle);
-//                Boolean result1 = connect(middle, head,asvCount, asvConfigs, obstacles);
-//                Boolean result2 = connect(middle, tail,asvCount, asvConfigs, obstacles);
-//                if (result1 && result2){
-//                    double length = head.totalDistance(tail);
-//                    head.addNeighbor(tail, length);
-//                    tail.addNeighbor(head, length);
-//                    return true;
-//                }
-//            }
-//        }
-//        return false;
-//    }
 
-//    public static boolean connect(ASVConfig head, ASVConfig tail, int asvCount, Set<ASVConfig> asvConfigs, List<Obstacle> obstacles){
-////        double maxDist = head.totalDistance(tail) / asvCount;
-//        double maxDist = head.maxDistance(tail);
-//        if (maxDist <= 0.001){
-//            double length = head.totalDistance(tail);
-//            head.addNeighbor(tail, length);
-//            tail.addNeighbor(head, length);
-//            return true;
-//        } else if (maxDist < tolerance){
-//            ASVConfig middle = new ASVConfig(middleCSpace(head, tail));
-//            if (check(middle, obstacles)) {
-////                asvConfigs.add(middle);
-//                if (connect(middle, head,asvCount, asvConfigs, obstacles) && connect(middle, tail,asvCount, asvConfigs, obstacles)){
-////                    double length = head.totalDistance(tail);
-////                    head.addNeighbor(tail, length);
-////                    tail.addNeighbor(head, length);
-//                    return true;
-//                }
-//            }
-//        }
-//        return false;
-//    }
+    public static boolean loopForConnect(int count, ASVConfig temp, List<Double> delta, List<Obstacle> obstacles){
+        for (int i = 0; i < count; i++) {
+            for (int j = 0; j < temp.getcspacePosition().size(); j++) {
+                temp.setCspacePosition(j, temp.getcspacePosition().get(j) + delta.get(j));
+            }
+
+            if (!check(temp, obstacles)) {
+                return false;
+            }
+        }
+        return true;
+    }
 
     public static List<Double> middleCSpace(ASVConfig head, ASVConfig tail) {
         List<Double> cspace = new ArrayList<Double>();
@@ -484,83 +461,60 @@ public class Main {
         if (maxDist <= 0.001) {
             head.setParent(tail);
         } else {
-            //           int count = (int)(maxDist / 0.0007) + 1;
-            double count = maxDist / 0.0003;
-            List<Double> delta = new ArrayList<>();
-            ASVConfig temp = head;
-            for (int i = 0; i < head.getcspacePosition().size(); i++) {
-                delta.add((tail.getcspacePosition().get(i) - head.getcspacePosition().get(i)) / count);
-            }
-            int steps = 0;
-            for (; steps < count; steps++) {
-                List<Double> cspace = new ArrayList<>();
-                for (int j = 0; j < temp.getcspacePosition().size(); j++) {
-                    cspace.add(j, temp.getcspacePosition().get(j) + delta.get(j));
+            double angle = head.getcspacePosition().get(2) - tail.getcspacePosition().get(2);
+            if (Math.abs(angle) <= Math.PI) {
+                //           int count = (int)(maxDist / 0.0007) + 1;
+                double count = maxDist / 0.0003;
+                List<Double> delta = new ArrayList<>();
+                ASVConfig temp = head;
+                for (int i = 0; i < head.getcspacePosition().size(); i++) {
+                    delta.add((tail.getcspacePosition().get(i) - head.getcspacePosition().get(i)) / count);
                 }
-                ASVConfig asvConfig = new ASVConfig(cspace);
-                temp.setParent(asvConfig);
-                if (temp.maxDistance(asvConfig) > 0.001) {
-                    System.out.println(temp.maxDistance(asvConfig));
+                temp = loopForMinimalStep((int)count, temp, delta);
+                temp.setParent(tail);
+            } else {
+                if (angle > 0){
+                    double count = maxDist / 0.0003;
+                    List<Double> delta = new ArrayList<>();
+                    ASVConfig temp = head;
+                    ASVConfig tailTemp = new ASVConfig(tail);
+                    tailTemp.setCspacePosition(2, tailTemp.getcspacePosition().get(2) + 2 * Math.PI);
+                    for (int i = 0; i < head.getcspacePosition().size(); i++) {
+                        delta.add((tailTemp.getcspacePosition().get(i) - head.getcspacePosition().get(i)) / count);
+                    }
+                    temp = loopForMinimalStep((int)count, temp, delta);
+                    temp.setParent(tail);
+                } else {
+                    double count = maxDist / 0.0003;
+                    List<Double> delta = new ArrayList<>();
+                    ASVConfig temp = head;
+                    ASVConfig headTemp = new ASVConfig(head);
+                    headTemp.setCspacePosition(2, headTemp.getcspacePosition().get(2) + 2 * Math.PI);
+                    for (int i = 0; i < head.getcspacePosition().size(); i++) {
+                        delta.add(tail.getcspacePosition().get(i) - headTemp.getcspacePosition().get(i) / count);
+                    }
+                    temp = loopForMinimalStep((int)count, temp, delta);
+                    temp.setParent(tail);
                 }
-                temp = asvConfig;
             }
-            temp.setParent(tail);
         }
     }
 
-
-//    public static void computeMiddle(ASVConfig asvConfig, List<Obstacle> obstacles){
-//        while (asvConfig.getParent() != null){
-//            ASVConfig temp = asvConfig;
-//            ASVConfig destination = temp.getParent();
-//            double count = destination.maxDistance(temp) / 0.00002;
-//            List<Double> cspaceDelta = new ArrayList<Double>();
-//            for (int i = 0; i < temp.getcspacePosition().size(); i++){
-//                cspaceDelta.add((temp.getcspacePosition().get(i) - destination.getcspacePosition().get(i)) / count);
-//            }
-//            for (int i = 0; i < count; i++){
-//                List<Double> csList = new ArrayList<Double>();
-//                for (int b = 0; b < cspaceDelta.size(); b++){
-//                    csList.add(temp.getcspacePosition().get(b) - cspaceDelta.get(b));
-//                }
-//                ASVConfig add = new ASVConfig(csList);
-//
-//                for (int a = 0; a < 30000; a++){
-//                    if (temp.maxDistance(add) <= 0.001){
-//                        if (check(add, obstacles))
-//                            break;
-//                    }
-//                    add = sampleSimilar(temp);
-//                }
-//                if (add.maxDistance(destination) <= 0.001){
-//                    break;
-//                }
-//                temp.setParent(add);
-//                temp = add;
-//            }
-//            temp.setParent(destination);
-//            asvConfig = destination;
-//        }
-//    }
-//    public static ASVConfig connectMiddle(ASVConfig head, ASVConfig tail, List<Obstacle> obstacles){
-//        double maxDist = head.maxDistance(tail);
-//        if (maxDist <= 0.001){
-//            head.setParent(tail);
-//            return null;
-//        } else {
-//            ASVConfig middle = new ASVConfig(middleCSpace(head, tail));
-//            if (check(middle, obstacles)) {
-//                return middle;
-//            } else {
-//                for (int i = 0; i < 100; i++) {
-//                    ASVConfig sample = sampleSimilar(middle);
-//                    if (check(sample, obstacles)) {
-//                        return sample;
-//                    }
-//                }
-//            }
-//        }
-//    }
+    public static ASVConfig loopForMinimalStep(int count, ASVConfig temp, List<Double> delta){
+        for (int i = 0; i < count; i++) {
+            List<Double> cspace = new ArrayList<>();
+            for (int j = 0; j < temp.getcspacePosition().size(); j++) {
+                cspace.add(j, temp.getcspacePosition().get(j) + delta.get(j));
+            }
+            ASVConfig asvConfig = new ASVConfig(cspace);
+            temp.setParent(asvConfig);
+            if (temp.maxDistance(asvConfig) > 0.001) {
+                System.out.println(temp.maxDistance(asvConfig));
+            }
+            temp = asvConfig;
+        }
+        return temp;
+    }
 
     public static ASVConfig sampleSimilar(ASVConfig asv) {
         double delta = 0.0019;
@@ -618,18 +572,9 @@ public class Main {
 
     public static void translation(ASVConfig asvConfig, Set<ASVConfig> asvConfigs, List<Obstacle> obstacles){
         //Left translation
-        double delta = 0.05;
-        double threshold = 0.2;
+        double delta = 0.1;
+        double threshold = 0.5;
         int asvCount = asvConfig.getASVCount();
-        for (double i = delta; i < threshold;i += delta){
-            List<Double> cspace = new ArrayList<>(asvConfig.getcspacePosition());
-            cspace.set(0, asvConfig.getcspacePosition().get(0) + i);
-            if (!checkLoop(cspace, obstacles, asvConfigs, asvCount)){
-                break;
-            }
-        }
-
-        //Right translation
         for (double i = delta; i < threshold;i += delta){
             List<Double> cspace = new ArrayList<>(asvConfig.getcspacePosition());
             cspace.set(0, asvConfig.getcspacePosition().get(0) - i);
@@ -638,10 +583,19 @@ public class Main {
             }
         }
 
+        //Right translation
+        for (double i = delta; i < threshold;i += delta){
+            List<Double> cspace = new ArrayList<>(asvConfig.getcspacePosition());
+            cspace.set(0, asvConfig.getcspacePosition().get(0) + i);
+            if (!checkLoop(cspace, obstacles, asvConfigs, asvCount)){
+                break;
+            }
+        }
+
         //Up translation
         for (double i = delta; i < threshold;i += delta){
             List<Double> cspace = new ArrayList<>(asvConfig.getcspacePosition());
-            cspace.set(0, asvConfig.getcspacePosition().get(1) + i);
+            cspace.set(1, asvConfig.getcspacePosition().get(1) + i);
             if (!checkLoop(cspace, obstacles, asvConfigs, asvCount)){
                 break;
             }
@@ -650,7 +604,7 @@ public class Main {
         //Down translation
         for (double i = delta; i < threshold;i += delta){
             List<Double> cspace = new ArrayList<>(asvConfig.getcspacePosition());
-            cspace.set(0, asvConfig.getcspacePosition().get(1) - i);
+            cspace.set(1, asvConfig.getcspacePosition().get(1) - i);
             if (!checkLoop(cspace, obstacles, asvConfigs, asvCount)){
                 break;
             }
@@ -729,55 +683,6 @@ public class Main {
         return false;
 
     }
-
-    //Density: 1000 - 10000
-//    public static ArrayList<Point2D> FindSamplePosition(List<Obstacle> obstacles, double Density) {
-//
-//        ArrayList<Point2D> samplePositions = new ArrayList<Point2D>();
-//        for (Obstacle obs : obstacles) {
-//            double minX = obs.getRect().getMinX();
-//            double minY = obs.getRect().getMinY();
-//            double size = obs.getRect().getWidth() * obs.getRect().getHeight();
-//            ArrayList<Point2D> points = new ArrayList<Point2D>();
-//            int sampleNO = (int) Math.round(size * Density) ;
-//            for (int i = 0; i < sampleNO; i++) {
-//                double x = minX + (obs.getRect().getWidth() * Math.random());
-//                double y = minY + (obs.getRect().getHeight() * Math.random());
-//                Point2D point = new Point2D.Double(x, y);
-//                points.add(point);
-//            }
-//            obstaclePoints.put(obs, points);
-//            System.out.println(obstaclePoints.get(obs));
-//        }
-//
-//        Iterator<Obstacle> obs = obstacles.iterator();
-//
-//        while (obs.hasNext()) {
-//            Obstacle obstacleTemp = obs.next();
-//            ArrayList<Point2D> obsPoints = obstaclePoints.get(obstacleTemp);
-//            System.out.println(obsPoints);
-//            for (Obstacle obs2 : obstacles) {
-//                if (obs2 == obstacleTemp) {
-//                    continue;
-//                }
-//                ArrayList<Point2D> obs2Points = obstaclePoints.get(obs2);
-//                for (Point2D pt : obsPoints) {
-//                    for (Point2D pt2 : obs2Points) {
-//                        double x = (pt.getX() + pt2.getX()) / 2;
-//                        double y = (pt.getY() + pt2.getY()) / 2;
-//                        Point2D point = new Point2D.Double(x, y);
-//                        if (pointCollisionObstacle(point, obstacles)) {
-//                            continue;
-//                        } else {
-//                            samplePositions.add(point);
-//                        }
-//                    }
-//                }
-//            }
-//            obs.remove();
-//        }
-//        return samplePositions;
-//    }
 
     public static ArrayList<Point2D> FindSamplePositionCorner(List<Obstacle> obstacles, int sampleNO){
         ArrayList<Point2D> samplePositions = new ArrayList<Point2D>();
