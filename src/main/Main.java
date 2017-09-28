@@ -38,30 +38,21 @@ public class Main {
 //         String inputFileName = "testcases/7-ASV-x6.txt";
 //         String inputFileName = "testcases/7ASV-easy.txt";
 //        String inputFileName = "testcases/7ASV.txt";
-        String inputFileName = "testcases/01.txt";
+//        String inputFileName = "testcases/01.txt";
 //         String inputFileName = "testcases/02.txt";
 //         String inputFileName = "testcases/03.txt";
 //         String inputFileName = "testcases/05.txt";
 //         String inputFileName = "testcases/06.txt";
-//        String inputFileName = "testcases/07.txt";
-//        String inputFileName = "testcases/08.txt";
-//        String inputFileName = "testcases/09.txt";
-//        String inputFileName = "testcases/10.txt";
-//        String inputFileName = "testcases/11.txt";
-//        String inputFileName = "testcases/12.txt";
-//        String inputFileName = "testcases/13.txt";
 //        String inputFileName = "testcases/14.txt";
 //        String inputFileName = "testcases/15.txt";
-//        String inputFileName = "4ASV.txt";
-//        String inputFileName = "4ASV-easy.txt";
-//        String inputFileName = "4ASV-easy2.txt";
-//        String inputFileName = "4ASV-x2.txt";
-//        String inputFileName = "4ASV-x6.txt";
-//        String inputFileName = "5ASV.txt";
-//        String inputFileName = "5ASV-easy.txt";
-//        String inputFileName = "5ASV-easy2.txt";
-//        String inputFileName = "5ASV-x2.txt";
-//        String inputFileName = "5ASV-x6.txt";
+//        String inputFileName = "testcases/4ASV.txt";
+//        String inputFileName = "testcases/4ASV-easy.txt";
+//        String inputFileName = "testcases/4ASV-x2.txt";
+//        String inputFileName = "testcases/4ASV-x6.txt";
+//        String inputFileName = "testcases/5ASV.txt";
+//        String inputFileName = "testcases/5ASV-easy.txt";
+//        String inputFileName = "testcases/5ASV-x2.txt";
+        String inputFileName = "testcases/5ASV-x6.txt";
 
         String outputFileName = "output.txt";
         ProblemSpec ps = new ProblemSpec();
@@ -81,9 +72,18 @@ public class Main {
 
         int uniformLoop = 100;
         int betweenObstacle = 25;
-        if (ps.getASVCount() < 5){
+        if (ps.getASVCount() < 4){
             betweenObstacle = 5;
-        }else {
+        } else if (ps.getASVCount() == 4){
+            betweenObstacle = 20;
+            uniformLoop += 110 * ps.getASVCount();
+        } else if (ps.getASVCount() == 5) {
+            betweenObstacle = 7;
+            uniformLoop += 60 * ps.getASVCount();
+        } else if (ps.getASVCount() == 6){
+            betweenObstacle = 7;
+            uniformLoop += 60 * ps.getASVCount();
+        } else {
             uniformLoop += 60 * ps.getASVCount();
         }
 
