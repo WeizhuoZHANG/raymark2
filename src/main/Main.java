@@ -33,18 +33,25 @@ public class Main {
 //         String inputFileName = "testcases/3ASV.txt";
 //         String inputFileName = "testcases/3ASV-easy.txt";
 //         String inputFileName = "testcases/3ASV-x4.txt";
-        // String inputFileName = "testcases/7-ASV-x2.txt";
+//         String inputFileName = "testcases/7-ASV-x2.txt";
 //         String inputFileName = "testcases/7-ASV-x4.txt";
 //         String inputFileName = "testcases/7-ASV-x6.txt";
 //         String inputFileName = "testcases/7ASV-easy.txt";
 //        String inputFileName = "testcases/7ASV.txt";
-         String inputFileName = "testcases/01.txt";
-        // String inputFileName = "testcases/02.txt";
-        // String inputFileName = "testcases/03.txt";
-        // String inputFileName = "testcases/04.txt";
-        // String inputFileName = "testcases/05.txt";
-        // String inputFileName = "testcases/06.txt";
-        // String inputFileName = "testcases/07.txt";
+//        String inputFileName = "testcases/01.txt";
+//         String inputFileName = "testcases/02.txt";
+         String inputFileName = "testcases/03.txt";
+//         String inputFileName = "testcases/05.txt";
+//         String inputFileName = "testcases/06.txt";
+//        String inputFileName = "testcases/07.txt";
+//        String inputFileName = "testcases/08.txt";
+//        String inputFileName = "testcases/09.txt";
+//        String inputFileName = "testcases/10.txt";
+//        String inputFileName = "testcases/11.txt";
+//        String inputFileName = "testcases/12.txt";
+//        String inputFileName = "testcases/13.txt";
+//        String inputFileName = "testcases/14.txt";
+//        String inputFileName = "testcases/15.txt";
 
         String outputFileName = "output.txt";
         ProblemSpec ps = new ProblemSpec();
@@ -71,7 +78,7 @@ public class Main {
         StringBuffer path = new StringBuffer();
 
         System.out.println("loop uniform sample");
-        for (int i = 0; i < 600;){
+        for (int i = 0; i < 650;){
 //        for (int i = 1; i < Math.pow(85, weight); i++) {
             i += (sample(0, 1, 0, 1, asvCount, ps.getObstacles(), asvConfigs)) ? 1 : 0;
         }

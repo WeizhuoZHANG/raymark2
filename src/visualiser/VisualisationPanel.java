@@ -59,7 +59,7 @@ public class VisualisationPanel extends JComponent {
 	}
 
 	public void setFramerate(int framerate) {
-		this.framePeriod = 1000 / framerate;
+		this.framePeriod = 10000 / framerate;
 		if (animationTimer != null) {
 			animationTimer.setDelay(framePeriod);
 		}
