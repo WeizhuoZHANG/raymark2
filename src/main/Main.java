@@ -52,6 +52,16 @@ public class Main {
 //        String inputFileName = "testcases/13.txt";
 //        String inputFileName = "testcases/14.txt";
 //        String inputFileName = "testcases/15.txt";
+//        String inputFileName = "4ASV.txt";
+//        String inputFileName = "4ASV-easy.txt";
+//        String inputFileName = "4ASV-easy2.txt";
+//        String inputFileName = "4ASV-x2.txt";
+//        String inputFileName = "4ASV-x6.txt";
+//        String inputFileName = "5ASV.txt";
+//        String inputFileName = "5ASV-easy.txt";
+//        String inputFileName = "5ASV-easy2.txt";
+//        String inputFileName = "5ASV-x2.txt";
+//        String inputFileName = "5ASV-x6.txt";
 
         String outputFileName = "output.txt";
         ProblemSpec ps = new ProblemSpec();
