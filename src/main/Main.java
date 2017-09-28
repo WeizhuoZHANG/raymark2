@@ -30,7 +30,7 @@ public class Main {
         // String inputFileName = args[0];
         // String outputFileName = args[1];
 
-         String inputFileName = "testcases/3ASV.txt";
+//         String inputFileName = "testcases/3ASV.txt";
 //         String inputFileName = "testcases/3ASV-easy.txt";
 //         String inputFileName = "testcases/3ASV-x4.txt";
 //         String inputFileName = "testcases/7-ASV-x2.txt";
@@ -38,7 +38,7 @@ public class Main {
 //         String inputFileName = "testcases/7-ASV-x6.txt";
 //         String inputFileName = "testcases/7ASV-easy.txt";
 //        String inputFileName = "testcases/7ASV.txt";
-//        String inputFileName = "testcases/01.txt";
+        String inputFileName = "testcases/01.txt";
 //         String inputFileName = "testcases/02.txt";
 //         String inputFileName = "testcases/03.txt";
 //         String inputFileName = "testcases/05.txt";
@@ -70,11 +70,11 @@ public class Main {
 //		ArrayList<Point2D> test2 = FindSamplePositionCorner(ps.getObstacles(), 15);
 
         int uniformLoop = 100;
-        int betweenObstacle = 15;
+        int betweenObstacle = 25;
         if (ps.getASVCount() < 5){
             betweenObstacle = 5;
         }else {
-            uniformLoop += 30 * ps.getASVCount();
+            uniformLoop += 60 * ps.getASVCount();
         }
 
         System.out.println("Weight: " + weight);
