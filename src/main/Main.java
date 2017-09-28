@@ -30,7 +30,7 @@ public class Main {
         // String inputFileName = args[0];
         // String outputFileName = args[1];
 
-//         String inputFileName = "testcases/3ASV.txt";
+         String inputFileName = "testcases/3ASV.txt";
 //         String inputFileName = "testcases/3ASV-easy.txt";
 //         String inputFileName = "testcases/3ASV-x4.txt";
 //         String inputFileName = "testcases/7-ASV-x2.txt";
@@ -40,7 +40,7 @@ public class Main {
 //        String inputFileName = "testcases/7ASV.txt";
 //        String inputFileName = "testcases/01.txt";
 //         String inputFileName = "testcases/02.txt";
-         String inputFileName = "testcases/03.txt";
+//         String inputFileName = "testcases/03.txt";
 //         String inputFileName = "testcases/05.txt";
 //         String inputFileName = "testcases/06.txt";
 //        String inputFileName = "testcases/07.txt";
@@ -69,6 +69,14 @@ public class Main {
 
 //		ArrayList<Point2D> test2 = FindSamplePositionCorner(ps.getObstacles(), 15);
 
+        int uniformLoop = 100;
+        int betweenObstacle = 15;
+        if (ps.getASVCount() < 5){
+            betweenObstacle = 5;
+        }else {
+            uniformLoop += 30 * ps.getASVCount();
+        }
+
         System.out.println("Weight: " + weight);
 
         asvConfigs.add(initial);
@@ -77,8 +85,9 @@ public class Main {
 
         StringBuffer path = new StringBuffer();
 
+
         System.out.println("loop uniform sample");
-        for (int i = 0; i < 650;){
+        for (int i = 0; i < uniformLoop;){
 //        for (int i = 1; i < Math.pow(85, weight); i++) {
             i += (sample(0, 1, 0, 1, asvCount, ps.getObstacles(), asvConfigs)) ? 1 : 0;
         }
@@ -116,11 +125,11 @@ public class Main {
             }
             double sampleTime =  Math.pow(weight, 2) ;
             //		input
-            int minimumSample = 3;
+            int minimumSample = betweenObstacle;
             int countSample = 0;
             System.out.println("Set "+pair.getKey() + " = " + count +"  weight = "+(int) weight);
             while(countSample<minimumSample){
-                countSample = countSample(array,countSample, sampleTime, asvCount, ps.getObstacles(), asvConfigs );
+                countSample = countSample(array,countSample, sampleTime, asvCount, ps.getObstacles(), asvConfigs, minimumSample);
                 System.out.println("Sample Count: "+countSample);
             }
         }
@@ -164,9 +173,8 @@ public class Main {
     }
 
     public static int countSample(ArrayList<Point2D> array, int count, double sampleTime, int asvCount, List<Obstacle> obstacles,
-                                  Set<ASVConfig> asvConfigs){
+                                  Set<ASVConfig> asvConfigs, int threshold){
         int sampleCount = count;
-        int threshold = 3;
         if (array.size() > threshold){
             Set<Integer> hashset = randomSet(array.size(), threshold);
             for (int index : hashset){
